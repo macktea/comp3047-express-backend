@@ -38,11 +38,11 @@ router.post('/rent_equipment', async function (req, res) {
 router.get('/equipments/detail/:id', async function (req, res) {
   const db = await connectToDB();
   try {
-    let result = await db.collection("bookings").findOne({ _id: new ObjectId(req.params.id) });
+    let result = await db.collection("rent_equipments").findOne({ _id: new ObjectId(req.params.id) });
     if (result) {
-      res.render('booking', { booking: result });
+      res.render('equipments', { equipments: result });
     } else {
-      res.status(404).json({ message: "Booking not found" });
+      res.status(404).json({ message: "Equipment not found" });
     }
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -50,6 +50,44 @@ router.get('/equipments/detail/:id', async function (req, res) {
     await db.client.close();
   }
 });
+
+// Delete a equipment
+// router.post('/booking/delete/:id', async function (req, res) {
+//   const db = await connectToDB();
+//   try {
+//     let result = await db.collection("bookings").deleteOne({ _id: new ObjectId(req.params.id) });
+//     if (result.deletedCount > 0) {
+//       res.status(200).json({ message: "Booking deleted" });
+//     } else {
+//       res.status(404).json({ message: "Booking not found" });
+//     }
+//   } catch (err) {
+//     res.status(400).json({ message: err.message });
+//   } finally {
+//     await db.client.close();
+//   }
+// });
+
+
+//get the edit page
+router.get('/equipment/edit/:id', async function (req, res) {
+  const db = await connectToDB();
+  try {
+    let result = await db.collection("rent_equipments").findOne({ _id: new ObjectId(req.params.id) });
+    if (result) {
+      res.render('edit', { equipments: result });
+    } else {
+      res.status(404).json({ message: "Equipment not found" });
+    }
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  } finally {
+    await db.client.close();
+  }
+});
+
+
+
 
 
 module.exports = router;
