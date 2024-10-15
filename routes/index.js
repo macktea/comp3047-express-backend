@@ -9,13 +9,27 @@ router.get('/', function(req, res, next) {
 
 
 /* GET equipmwnts page */
-router.get('/equipments', function(req, res, next) {
+router.get('/equipments', function(req, res) {
   res.render('equipments', { title: 'Equipments' });
 });
+
 
 /* GET add page */
 router.get('/equipments/add', function(req, res, next) { 
   res.render('add', { title: 'Add Equipment' });
+});
+
+// get all equipments
+router.get('/rent_equipment', async function (req, res) {
+  const db = await connectToDB();
+  try {
+    let results = await db.collection("rent_equipments").find().toArray();
+    res.json(results);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  } finally {
+    await db.client.close();
+  }
 });
 
 
@@ -33,6 +47,8 @@ router.post('/rent_equipment', async function (req, res) {
     await db.client.close();
   }
 });
+
+
 
 /* Display a detail equipment */
 router.get('/equipments/detail/:id', async function (req, res) {
