@@ -9,8 +9,17 @@ router.get('/', function(req, res, next) {
 
 
 /* GET equipmwnts page */
-router.get('/equipments', function(req, res) {
-  res.render('equipments', { title: 'Equipments' });
+router.get('/equipments', async function(req, res) {
+  const db = await connectToDB();
+  try {
+    let results = await db.collection("rent_equipments").find().toArray();
+    res.render('rent_equipments', { rent_equipments: results });
+    console.log(results);
+  } catch (err) {
+      res.status(400).json({ message: err.message });
+  } finally {
+      await db.client.close();
+  }
 });
 
 
