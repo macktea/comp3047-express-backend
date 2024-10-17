@@ -79,7 +79,7 @@
 
 
    <!-- form -->
-   <form class="form-container" method="post" action="/equipments">
+   <form class="form-container" method="post" action="/rent_equipment">
     <div class="row mb-3">
       <div class="col">
         <label for="name" class="form-label">Name</label>
@@ -101,12 +101,13 @@
     </div>
     <div class="row mb-3">
       <div class="col">
-        <label for="image-url" class="form-label">Image URL</label>
-        <input type="text" class="form-control" id="image-url" name="image-url" required>
+        <label for="image-url" class="form-label">Image URL</label> 
+        <!-- https://picsum.photos/200 -->
+        <input type="text" class="form-control" id="image-url" name="image_url" required>
       </div>
       <div class="col">
         <label for="contact-person" class="form-label">Contact Person</label>
-        <input type="text" class="form-control" id="contact-person" name="contact-person" required>
+        <input type="text" class="form-control" id="contact-person" name="contact_person" required>
       </div>
       <div class="col">
         <label for="color" class="form-label">Color</label>

@@ -60,12 +60,12 @@ router.post('/rent_equipment', async function (req, res) {
 
 
 /* Display a detail equipment */
-router.get('/equipments/detail/:id', async function (req, res) {
+router.get('/equipment/detail/:id', async function (req, res) {
   const db = await connectToDB();
   try {
     let result = await db.collection("rent_equipments").findOne({ _id: new ObjectId(req.params.id) });
     if (result) {
-      res.render('equipments', { equipments: result });
+      res.render('detail', { equipments: result });
     } else {
       res.status(404).json({ message: "Equipment not found" });
     }

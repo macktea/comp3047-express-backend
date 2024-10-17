@@ -75,17 +75,20 @@
     <!-- breadcrumb -->
 
     <!-- Equipments -->
-     <% for (var i = 0; i < rent_equipments.length; i++) { %>
-    <div class="card" style="width: 18rem;">
-      <img src= %= rent_equipments[i].image-url class="card-img-top">
-      <div class="card-body">
-        <h5 class="card-title"><%= rent_equipments[i].name %></h5>
-        <p class="card-text"><%= rent_equipments[i].description %></p>
-        <a href="/equipment/edit/<%=rent_equipments[i]._id %>" class="btn btn-primary">Edit</a>
-      </div>
-    </div>
 
-    <%= rent_equipments[i].name %>
+    <% for (var i = 0; i < rent_equipments.length; i++) { %>
+      <div class="card" style="width: 18rem;">
+        <a href="/equipment/detail/<%=rent_equipments[i]._id %>">
+          <img src= "<%= rent_equipments[i].image_url %>" class="card-img-top" >
+        </a>
+        
+        <div class="card-body">
+          <h5 class="card-title"><%= rent_equipments[i].name %></h5>
+          <p class="card-text"><%= rent_equipments[i].description %></p>
+          <a href="/equipment/edit/<%=rent_equipments[i]._id %>" class="btn btn-outline-primary">Edit</a>
+        </div>
+      </div>
+
     <% } %>
     <!-- Equipments -->
 
