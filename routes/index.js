@@ -3,8 +3,18 @@ const router = express.Router();
 const { connectToDB, ObjectId } = require('../utils/db');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+router.get('/', async function(req, res, next) {
+  const db = await connectToDB();
+  try {
+    let results = await db.collection("rent_equipments").find().toArray();
+    console.log(results);
+    res.render('index', { equipments: results });
+    
+  } catch (err) {
+      res.status(400).json({ message: err.message });
+  } finally {
+      await db.client.close();
+  }
 });
 
 
@@ -13,13 +23,26 @@ router.get('/equipments', async function(req, res) {
   const db = await connectToDB();
   try {
     let results = await db.collection("rent_equipments").find().toArray();
+    
+    // Calculate time difference
+    results = results.map(equipment => {
+      if (equipment.lastUpdated) {
+        const now = new Date();
+        const diffMs = now - new Date(equipment.lastUpdated);
+        const diffMins = Math.round(diffMs / 60000);
+        equipment.lastUpdatedText = `Last updated: ${diffMins} mins ago`;
+      } else {
+        equipment.lastUpdatedText = null; // Set to null if never updated
+      }
+      return equipment;
+    });
+
     res.render('equipments', { equipments: results });
-    console.log(results);
   } catch (err) {
-      res.status(400).json({ message: err.message });
+    res.status(400).json({ message: err.message });
   } finally {
-      await db.client.close();
-  }
+    await db.client.close();
+  }
 });
 
 
@@ -29,11 +52,12 @@ router.get('/equipments/add', function(req, res, next) {
 });
 
 
-// get all equipments ??
+// get equipments
 router.get('/rent_equipment', async function (req, res) {
   const db = await connectToDB();
   try {
     let results = await db.collection("rent_equipments").find().toArray();
+    redirect('/equipments');
     res.json(results);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -78,21 +102,21 @@ router.get('/equipment/detail/:id', async function (req, res) {
 });
 
 // Delete a equipment
-// router.post('/booking/delete/:id', async function (req, res) {
-//   const db = await connectToDB();
-//   try {
-//     let result = await db.collection("bookings").deleteOne({ _id: new ObjectId(req.params.id) });
-//     if (result.deletedCount > 0) {
-//       res.status(200).json({ message: "Booking deleted" });
-//     } else {
-//       res.status(404).json({ message: "Booking not found" });
-//     }
-//   } catch (err) {
-//     res.status(400).json({ message: err.message });
-//   } finally {
-//     await db.client.close();
-//   }
-// });
+router.post('/equipment/delete/:id', async function (req, res) {
+  const db = await connectToDB();
+  try {
+    let result = await db.collection("rent_equipments").deleteOne({ _id: new ObjectId(req.params.id) });
+    if (result.deletedCount > 0) {
+      res.status(200).json({ message: "Equipment deleted" });
+    } else {
+      res.status(404).json({ message: "Equipment not found" });
+    }
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  } finally {
+    await db.client.close();
+  }
+});
 
 
 //get the edit page
@@ -113,14 +137,15 @@ router.get('/equipment/edit/:id', async function (req, res) {
 });
 
 // display the update form
-router.get('/booking/update/:id', async function (req, res) {
+router.get('/equipment/update/:id', async function (req, res) {
   const db = await connectToDB();
   try {
-    let result = await db.collection("bookings").findOne({ _id: new ObjectId(req.params.id) });
+    
+    let result = await db.collection("rent_equipments").findOne({ _id: new ObjectId(req.params.id) });
     if (result) {
-      res.render('update', { booking: result });
+      res.render('edit', { equipments: result });
     } else {
-      res.status(404).json({ message: "Booking not found" });
+      res.status(404).json({ message: "equipments not found" });
     }
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -130,24 +155,27 @@ router.get('/booking/update/:id', async function (req, res) {
 });
 
 // Update a single Booking
-router.post('/rent_equipment/update/:id', async function (req, res) {
+router.post('/equipment/update/:id', async function (req, res) {
   const db = await connectToDB();
   try {
-    req.body.highlight = req.body.highlight? true : false;
+    req.body.highlight = req.body.highlight ? true : false;
+    req.body.lastUpdated = new Date();
     console.log(req.body);
-    let result = await db.collection("rent_equipments").updateOne({ _id: new ObjectId(req.params.id) }, { $set: req.body });
+    let result = await db.collection("rent_equipments").updateOne(
+      { _id: new ObjectId(req.params.id) }, 
+      { $set: req.body }
+    );
 
     if (result.modifiedCount > 0) {
       res.status(200).json({ message: "Equipment updated" });
     } else {
       res.status(404).json({ message: "Equipment not found" });
     }
-
   } catch (err) {
     res.status(400).json({ message: err.message });
   } finally {
     await db.client.close();
-  }
+  }
 });
 
 

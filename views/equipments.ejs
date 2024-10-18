@@ -36,6 +36,17 @@
         text-decoration: none;
         }
 
+        .card-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
+        .card {
+          width: 18rem;
+        }
+
+
+
 
     </style>
 
@@ -76,20 +87,26 @@
 
     <!-- Equipments -->
 
-    <% for (var i = 0; i < equipments.length; i++) { %>
-      <div class="card" style="width: 18rem;">
-        <a href="/equipment/detail/<%=equipments[i]._id %>">
-          <img src= "<%= equipments[i].image_url %>" class="card-img-top" >
-        </a>
-        
-        <div class="card-body">
-          <h5 class="card-title"><%= equipments[i].name %></h5>
-          <p class="card-text"><%= equipments[i].description %></p>
-          <a href="/equipment/edit/<%=equipments[i]._id %>" class="btn btn-outline-primary">Edit</a>
+    
+    <div class="card-container">
+      <% for (var i = 0; i < equipments.length; i++) { %>
+        <div class="card">
+          <a href="/equipment/detail/<%=equipments[i]._id %>">
+            <img src="<%= equipments[i].image_url %>" class="card-img-top" alt="<%= equipments[i].name %>">
+          </a>
+          
+          <div class="card-body">
+            <h5 class="card-title"><%= equipments[i].name %></h5>
+            <p class="card-text"><%= equipments[i].description %></p>
+            <% if (equipments[i].lastUpdatedText) { %>
+              <p class="card-text"><small class="text-muted"><%= equipments[i].lastUpdatedText %></small></p>
+            <% } %>
+            <a href="/equipment/edit/<%=equipments[i]._id %>" class="btn btn-outline-primary">Edit</a>
+          </div>
         </div>
-      </div>
-
-    <% } %>
+      <%}%>
+    </div>
+    
     <!-- Equipments -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
