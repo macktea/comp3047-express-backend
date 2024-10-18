@@ -76,16 +76,16 @@
 
     <!-- Equipments -->
 
-    <% for (var i = 0; i < rent_equipments.length; i++) { %>
+    <% for (var i = 0; i < equipments.length; i++) { %>
       <div class="card" style="width: 18rem;">
-        <a href="/equipment/detail/<%=rent_equipments[i]._id %>">
-          <img src= "<%= rent_equipments[i].image_url %>" class="card-img-top" >
+        <a href="/equipment/detail/<%=equipments[i]._id %>">
+          <img src= "<%= equipments[i].image_url %>" class="card-img-top" >
         </a>
         
         <div class="card-body">
-          <h5 class="card-title"><%= rent_equipments[i].name %></h5>
-          <p class="card-text"><%= rent_equipments[i].description %></p>
-          <a href="/equipment/edit/<%=rent_equipments[i]._id %>" class="btn btn-outline-primary">Edit</a>
+          <h5 class="card-title"><%= equipments[i].name %></h5>
+          <p class="card-text"><%= equipments[i].description %></p>
+          <a href="/equipment/edit/<%=equipments[i]._id %>" class="btn btn-outline-primary">Edit</a>
         </div>
       </div>
 

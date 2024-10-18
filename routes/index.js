@@ -13,7 +13,7 @@ router.get('/equipments', async function(req, res) {
   const db = await connectToDB();
   try {
     let results = await db.collection("rent_equipments").find().toArray();
-    res.render('rent_equipments', { rent_equipments: results });
+    res.render('equipments', { equipments: results });
     console.log(results);
   } catch (err) {
       res.status(400).json({ message: err.message });
@@ -28,7 +28,8 @@ router.get('/equipments/add', function(req, res, next) {
   res.render('add', { title: 'Add Equipment' });
 });
 
-// get all equipments
+
+// get all equipments ??
 router.get('/rent_equipment', async function (req, res) {
   const db = await connectToDB();
   try {
@@ -59,7 +60,7 @@ router.post('/rent_equipment', async function (req, res) {
 
 
 
-/* Display a detail equipment */
+/* Display a detail equipment page*/
 router.get('/equipment/detail/:id', async function (req, res) {
   const db = await connectToDB();
   try {
@@ -111,8 +112,43 @@ router.get('/equipment/edit/:id', async function (req, res) {
   }
 });
 
+// display the update form
+router.get('/booking/update/:id', async function (req, res) {
+  const db = await connectToDB();
+  try {
+    let result = await db.collection("bookings").findOne({ _id: new ObjectId(req.params.id) });
+    if (result) {
+      res.render('update', { booking: result });
+    } else {
+      res.status(404).json({ message: "Booking not found" });
+    }
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  } finally {
+    await db.client.close();
+  }
+});
 
+// Update a single Booking
+router.post('/rent_equipment/update/:id', async function (req, res) {
+  const db = await connectToDB();
+  try {
+    req.body.highlight = req.body.highlight? true : false;
+    console.log(req.body);
+    let result = await db.collection("rent_equipments").updateOne({ _id: new ObjectId(req.params.id) }, { $set: req.body });
 
+    if (result.modifiedCount > 0) {
+      res.status(200).json({ message: "Equipment updated" });
+    } else {
+      res.status(404).json({ message: "Equipment not found" });
+    }
+
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  } finally {
+    await db.client.close();
+  }
+});
 
 
 module.exports = router;
