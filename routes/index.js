@@ -6,14 +6,13 @@ const { connectToDB, ObjectId } = require('../utils/db');
 router.get('/', async function(req, res, next) {
   const db = await connectToDB();
   try {
-    let results = await db.collection("rent_equipments").find().toArray();
+    let results = await db.collection("rent_equipments").find({ highlight: true }).toArray();
     console.log(results);
-    res.render('index', { equipments: results });
-    
+    res.render('index', { highlightedEquipments: results });
   } catch (err) {
-      res.status(400).json({ message: err.message });
+    res.status(400).json({ message: err.message });
   } finally {
-      await db.client.close();
+    await db.client.close();
   }
 });
 
