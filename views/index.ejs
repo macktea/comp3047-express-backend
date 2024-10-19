@@ -80,11 +80,9 @@
   <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
     <div class="carousel-inner">
       <% for (var i = 0; i < equipments.length; i++) { %>
-        <% if (equipments[i].highlight == true) { %>
-          <div class="carousel-item <%= i === 0 ? 'active' : '' %>">
-            <img src="<%= equipments[i].image_url %>" class="d-block w-100">
-          </div>
-        <% } %>
+        <div class="carousel-item active c-item">
+          <img src="<%= equipments[i].image_url %>" class="d-block w-100 c-img">
+        </div>
       <% } %>
     </div>
     <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
