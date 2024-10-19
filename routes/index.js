@@ -8,7 +8,7 @@ router.get('/', async function(req, res, next) {
   try {
     let results = await db.collection("rent_equipments").find({ highlight: true }).toArray();
     console.log(results);
-    res.render('index', { highlightedEquipments: results });
+    res.render('index', { equipments: results });
   } catch (err) {
     res.status(400).json({ message: err.message });
   } finally {
@@ -31,7 +31,7 @@ router.get('/equipments', async function(req, res) {
         const diffMins = Math.round(diffMs / 60000);
         equipment.lastUpdatedText = `Last updated: ${diffMins} mins ago`;
       } else {
-        equipment.lastUpdatedText = null; // Set to null if never updated
+        equipment.lastUpdatedText = null;
       }
       return equipment;
     });
@@ -73,7 +73,7 @@ router.post('/rent_equipment', async function (req, res) {
     req.body.highlight = req.body.highlight? true : false;
     console.log(req.body);
     let result = await db.collection("rent_equipments").insertOne(req.body);
-    res.status(201).json({ id: result.insertedId });
+    res.redirect('/equipments');
   } catch (err) {
     res.status(400).json({ message: err.message });
   } finally {
@@ -106,7 +106,7 @@ router.post('/equipment/delete/:id', async function (req, res) {
   try {
     let result = await db.collection("rent_equipments").deleteOne({ _id: new ObjectId(req.params.id) });
     if (result.deletedCount > 0) {
-      res.status(200).json({ message: "Equipment deleted" });
+      redirect('/equipments');
     } else {
       res.status(404).json({ message: "Equipment not found" });
     }
@@ -166,7 +166,7 @@ router.post('/equipment/update/:id', async function (req, res) {
     );
 
     if (result.modifiedCount > 0) {
-      res.status(200).json({ message: "Equipment updated" });
+      redirect('/equipments');
     } else {
       res.status(404).json({ message: "Equipment not found" });
     }
