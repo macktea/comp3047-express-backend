@@ -24,4 +24,4 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{ secrets.KENNYSDOCKER_REGISTRY }}/${{ github.event.repository.name }}/express:latest
+          tags: ${{ secrets.KENNYSDOCKER_REGISTRY }}/comp3047-fall2024-assignment1/express:${{ github.event.repository.name }}
