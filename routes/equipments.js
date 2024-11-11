@@ -17,7 +17,7 @@ router.get('/', async function (req, res) {
         let skip = (page - 1) * perPage;
 
         let result = await db.collection("rent_equipments").find(query).skip(skip).limit(perPage).toArray();
-        let total = await db.collection("rent_qeuipments").countDocuments(query);
+        let total = await db.collection("rent_equipments").countDocuments(query);
 
         res.json({ equipments: result, total: total, page: page, perPage: perPage });
     } catch (err) {
@@ -27,6 +27,8 @@ router.get('/', async function (req, res) {
         await db.client.close();
     }
 });
+
+
 
 // New Booking
 router.post('/rent_equipment', async function (req, res) {
