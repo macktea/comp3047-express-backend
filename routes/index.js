@@ -73,6 +73,7 @@ router.post('/rent_equipment', async function (req, res) {
     req.body.highlight = req.body.highlight? true : false;
     console.log(req.body);
     let result = await db.collection("rent_equipments").insertOne(req.body);
+    res.status(201).json({ id: result.insertedId });
     res.redirect('/equipments');
   } catch (err) {
     res.status(400).json({ message: err.message });
