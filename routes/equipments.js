@@ -9,6 +9,7 @@ router.post("/users", async function (req, res) {
   try {
     console.log(req.body);
     await db.collection("user").insertOne(req.body);
+    res.json({ users: result});
   } catch (err) {
     res.status(400).json({ message: err.message });
   } finally {
@@ -151,6 +152,8 @@ router.post("/", async function (req, res) {
     req.body.highlight = req.body.highlight ? true : false;
     console.log(req.body);
     await db.collection("rent_equipments").insertOne(req.body);
+
+    res.json({ equipments: result});
   } catch (err) {
     res.status(400).json({ message: err.message });
   } finally {
