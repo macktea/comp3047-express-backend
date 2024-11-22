@@ -1,14 +1,39 @@
 var express = require("express");
 var router = express.Router();
+var { authenticate } = require("../utils/auth");
 
 const { connectToDB, ObjectId } = require("../utils/db");
+
+
+// Specify booking being managed by a user
+router.patch('/:id/manage', authenticate, async function (req, res) {
+  const db = await connectToDB();
+  try {
+      let result = await db.collection("rent_equipments").updateOne({ _id: new ObjectId(req.params.id) },
+          {
+              $set: { manager: new ObjectId(req.user._id) }
+          });
+
+      if (result.modifiedCount > 0) {
+          res.status(200).json({ message: "User updated" });
+      } else {
+          res.status(404).json({ message: "User not found" });
+      }
+  } catch (err) {
+      res.status(500).json({ message: err.message });
+  }
+  finally {
+      await db.client.close();
+  }
+});
+
 
 //new user
 router.post("/users", async function (req, res) {
   const db = await connectToDB();
   try {
     console.log(req.body);
-    await db.collection("user").insertOne(req.body);
+    let result = await db.collection("user").insertOne(req.body);
     res.json({ users: result});
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -145,13 +170,13 @@ router.get("/", async function (req, res) {
   }
 });
 
-// New Booking
+// New equipment
 router.post("/", async function (req, res) {
   const db = await connectToDB();
   try {
     req.body.highlight = req.body.highlight ? true : false;
     console.log(req.body);
-    await db.collection("rent_equipments").insertOne(req.body);
+    let result = await db.collection("rent_equipments").insertOne(req.body);
 
     res.json({ equipments: result});
   } catch (err) {

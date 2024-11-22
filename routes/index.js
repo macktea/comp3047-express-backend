@@ -1,6 +1,40 @@
 const express = require('express');
 const router = express.Router();
 const { connectToDB, ObjectId } = require('../utils/db');
+const { generateToken, extractToken, removeToken, verifyToken } = require('../utils/auth');
+
+
+
+router.get('/test', verifyToken, function (req, res, next) {
+  console.log(req.user)
+  res.send('respond with a resource');
+});
+
+//login function
+router.post('/api/login', async function (req, res) {
+  const db = await connectToDB();
+  try {
+    // check if the user exists
+    var user = await db.collection("user").findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+   // res.json(user);
+
+// return a JWT token
+    res.json({ token: await generateToken(user) });
+    
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  } finally {
+    await db.client.close();
+  }
+});
+
+
+
+
 
 /* GET home page. */
 router.get('/', async function(req, res, next) {
@@ -176,6 +210,22 @@ router.post('/equipment/update/:id', async function (req, res) {
   } finally {
     await db.client.close();
   }
+});
+
+router.post('/api/logout', async function (req, res) {
+  const token = extractToken(req);
+
+  if (!token) {
+      return res.status(400).json({ message: "Bad Request: No token provided" }); // Handle missing token
+  }
+
+  try {
+      await removeToken(token); // Attempt to remove the token
+      res.status(204).send(); // No content response for successful logout
+  } catch (err) {
+      console.error("Error during logout:", err); // Log any errors
+      res.status(500).json({ message: "Internal Server Error" }); // Handle server errors
+  }
 });
 
 
