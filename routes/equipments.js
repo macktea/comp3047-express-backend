@@ -9,14 +9,36 @@ const { connectToDB, ObjectId } = require("../utils/db");
 router.patch('/:id/manage', authenticate, async function (req, res) {
   const db = await connectToDB();
   try {
+      console.log(req.params.id);
+      console.log(req.body.rent_time);
+      console.log(req.body.return_time);
+
+      await db.collection("rent_equipments").updateOne(
+        { _id: new ObjectId(req.params.id) },
+        {
+            $setOnInsert: {
+                'user_id': [],
+                'rent_time': [],
+                'return_time': []
+            }
+        },
+        { upsert: true }
+    );
+
+
       let result = await db.collection("rent_equipments").updateOne({ _id: new ObjectId(req.params.id) },
           {
-              $set: { manager: new ObjectId(req.user._id) }
+            $push: { 
+              'user_id': new ObjectId(req.user._id), 
+              'rent_time': new Date(req.body.rent_time),
+              'return_time': new Date(req.body.return_time)
+          }
           });
 
       if (result.modifiedCount > 0) {
           res.status(200).json({ message: "User updated" });
       } else {
+          
           res.status(404).json({ message: "User not found" });
       }
   } catch (err) {
@@ -27,6 +49,121 @@ router.patch('/:id/manage', authenticate, async function (req, res) {
   }
 });
 
+// get renter history
+router.get('/:id/rent_history', async function (req, res) {
+  const db = await connectToDB();
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const perPage = parseInt(req.query.perPage) || 8;
+    const skip = (page - 1) * perPage;
+
+    const equipment = await db.collection("rent_equipments").findOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+
+    if (!equipment) {
+      return res.status(404).json({ message: "Equipment not found" });
+    }
+
+    // Get all users involved in rentals
+    const userIds = equipment.user_id.map(id => new ObjectId(id));
+    const users = await db.collection("user").find(
+      { _id: { $in: userIds } }
+    ).toArray();
+
+    // user IDs to names
+    const userMap = {};
+    users.forEach(user => {
+      userMap[user._id.toString()] = {
+        name: user.name
+      };
+    });
+
+    // Combine the rental information
+    const rentalHistory = equipment.user_id.map((userId, index) => ({
+      index,
+      userName: userMap[userId.toString()],
+      rent_time: equipment.rent_time[index],
+      return_time: equipment.return_time[index]
+    }));
+
+    // Sort the array
+    // rentalHistory.sort((a, b) => {
+    //   if (sortField === 'userName') {
+    //     return sortOrder * a.userName.localeCompare(b.userName);
+    //   }
+    //   return sortOrder * (new Date(a[sortField]) - new Date(b[sortField]));
+    // });
+
+    // Apply pagination
+    const total = rentalHistory.length;
+    const paginatedRentals = rentalHistory.slice(skip, skip + perPage);
+
+    res.json({
+      rentalHistory: paginatedRentals,
+      total,
+      page,
+      perPage
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  } finally {
+    await db.client.close();
+  }
+});
+
+//delete rent history user
+router.delete('/:id/rental/:index', async (req, res) => {
+  const db = await connectToDB();
+  try {
+    const equipmentId = req.params.id;
+    const rentalId = req.params.index; // This should be the actual rental ID, not index
+
+    // Find the equipment
+    const equipment = await db.collection("rent_equipments").findOne(
+      { _id: new ObjectId(equipmentId) }
+    );
+
+    if (!equipment) {
+      return res.status(404).json({ message: "Equipment not found" });
+    }
+
+    // Find the specific rental index by matching all array elements
+    const rentalIndex = equipment.user_id.findIndex((_, index) => 
+      equipment.user_id[index].toString() === rentalId.toString()
+    );
+
+    if (rentalIndex === -1) {
+      return res.status(404).json({ message: "Rental record not found" });
+    }
+
+    // Create new arrays excluding the element at the specific index
+    const updatedUserIds = equipment.user_id.filter((_, index) => index !== rentalIndex);
+    const updatedRentTimes = equipment.rent_time.filter((_, index) => index !== rentalIndex);
+    const updatedReturnTimes = equipment.return_time.filter((_, index) => index !== rentalIndex);
+
+    // Update the document with the new arrays
+    await db.collection("rent_equipments").updateOne(
+      { _id: new ObjectId(equipmentId) },
+      {
+        $set: {
+          user_id: updatedUserIds,
+          rent_time: updatedRentTimes,
+          return_time: updatedReturnTimes
+        }
+      }
+    );
+
+    res.json({ message: "Rental record deleted successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  } finally {
+    await db.client.close();
+  }
+});
 
 //new user
 router.post("/users", async function (req, res) {
@@ -176,8 +313,10 @@ router.post("/", async function (req, res) {
   try {
     req.body.highlight = req.body.highlight ? true : false;
     console.log(req.body);
+
     let result = await db.collection("rent_equipments").insertOne(req.body);
 
+    
     res.json({ equipments: result});
   } catch (err) {
     res.status(400).json({ message: err.message });
