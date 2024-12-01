@@ -81,10 +81,11 @@ router.get('/:id/rent_history', async function (req, res) {
 
     // Combine the rental information
     const rentalHistory = equipment.user_id.map((userId, index) => ({
-      index,
+      userId: userId,
       userName: userMap[userId.toString()],
       rent_time: equipment.rent_time[index],
-      return_time: equipment.return_time[index]
+      return_time: equipment.return_time[index],
+      rentalId: `${index}-${userId}`
     }));
 
     // Sort the array
@@ -114,11 +115,14 @@ router.get('/:id/rent_history', async function (req, res) {
 });
 
 //delete rent history user
-router.delete('/:id/rental/:index', async (req, res) => {
+router.delete('/:id/rental/:rentalId', async (req, res) => {
   const db = await connectToDB();
   try {
     const equipmentId = req.params.id;
-    const rentalId = req.params.index; // This should be the actual rental ID, not index
+    const rentalId = req.params.rentalId;
+    
+    // Extract the index from the rentalId (format: "index-userId")
+    const rentalIndex = parseInt(rentalId.split('-')[0]);
 
     // Find the equipment
     const equipment = await db.collection("rent_equipments").findOne(
@@ -129,16 +133,18 @@ router.delete('/:id/rental/:index', async (req, res) => {
       return res.status(404).json({ message: "Equipment not found" });
     }
 
-    // Find the specific rental index by matching all array elements
-    const rentalIndex = equipment.user_id.findIndex((_, index) => 
-      equipment.user_id[index].toString() === rentalId.toString()
-    );
-
-    if (rentalIndex === -1) {
-      return res.status(404).json({ message: "Rental record not found" });
+    // Check if the index is valid
+    if (rentalIndex < 0 || rentalIndex >= equipment.user_id.length) {
+      return res.status(400).json({ message: "Invalid rental index" });
     }
 
-    // Create new arrays excluding the element at the specific index
+    // Verify that the rental ID matches
+    const expectedRentalId = `${rentalIndex}-${equipment.user_id[rentalIndex]}`;
+    if (expectedRentalId !== rentalId) {
+      return res.status(400).json({ message: "Invalid rental record" });
+    }
+
+    // Create new arrays excluding the element at the specified index
     const updatedUserIds = equipment.user_id.filter((_, index) => index !== rentalIndex);
     const updatedRentTimes = equipment.rent_time.filter((_, index) => index !== rentalIndex);
     const updatedReturnTimes = equipment.return_time.filter((_, index) => index !== rentalIndex);
