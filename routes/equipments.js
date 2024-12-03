@@ -4,9 +4,59 @@ var { authenticate } = require("../utils/auth");
 
 const { connectToDB, ObjectId } = require("../utils/db");
 
+//user rental history
+router.get("/users/:id/rent_history", async function (req, res) {
+  const db = await connectToDB();
+  try {
+    const userId = req.params.id;
+    const page = parseInt(req.query.page) || 1;
+    const perPage = parseInt(req.query.perPage) || 10;
+    const skip = (page - 1) * perPage;
+
+    // Find all equipment where this user has rented
+    const equipment = await db.collection("rent_equipments")
+      .find({
+        "user_id": { $elemMatch: { $eq: new ObjectId(userId) } }
+      })
+      .toArray();
+
+    // Compile rental history
+    let rentalHistory = [];
+    equipment.forEach(item => {
+      item.user_id.forEach((renterId, index) => {
+        if (renterId.toString() === userId) {
+          rentalHistory.push({
+            equipment_id: item._id,
+            equipment_name: item.name,
+            rent_time: item.rent_time[index],
+            return_time: item.return_time[index]
+          });
+        }
+      });
+    });
+
+
+    // Apply pagination
+    const total = rentalHistory.length;
+    const paginatedHistory = rentalHistory.slice(skip, skip + perPage);
+
+    res.json({
+      rentalHistory: paginatedHistory,
+      total,
+      page,
+      perPage
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  } finally {
+    await db.client.close();
+  }
+});
 
 // Specify booking being managed by a user
-router.patch('/:id/manage', authenticate, async function (req, res) {
+router.post('/:id/rent', authenticate, async function (req, res) {
   const db = await connectToDB();
   try {
       console.log(req.params.id);
@@ -88,13 +138,7 @@ router.get('/:id/rent_history', async function (req, res) {
       rentalId: `${index}-${userId}`
     }));
 
-    // Sort the array
-    // rentalHistory.sort((a, b) => {
-    //   if (sortField === 'userName') {
-    //     return sortOrder * a.userName.localeCompare(b.userName);
-    //   }
-    //   return sortOrder * (new Date(a[sortField]) - new Date(b[sortField]));
-    // });
+
 
     // Apply pagination
     const total = rentalHistory.length;
